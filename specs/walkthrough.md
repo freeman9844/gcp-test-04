@@ -15,7 +15,7 @@ await self.session.send_client_content(
     turn_complete=False
 )
 ```
-**Result**: Even with "silence heartbeat" workarounds, the model stopped sending any response (`LiveServerMessage`) for subsequent user turns within the same session.
+**Result**: Even with "silence heartbeat" workarounds, the model stopped sending any response (`LiveServerMessage`) for subsequent user turns within the same session. Re-testing on 2025-12-22 confirmed this consistent behavior (Turn 2 consistently timed out).
 
 ### Key Implementation Details
 - **Graceful Closure**: Existing listeners and sessions are cancelled and closed.
