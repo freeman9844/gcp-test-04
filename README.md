@@ -62,8 +62,3 @@ python gemini_live_test.py
   - `walkthrough.md`: 실패한 접근 방식과 성공한 접근 방식의 비교 분석.
   - `implementation_plan.md`: 기술 아키텍처 및 검증 세부 정보.
 
-## ⚠️ 알려진 제한 사항
-`gemini-live-2.5-flash-native-audio`는 프리뷰 모델입니다. `role="system"` 업데이트가 기술적으로 지원되지만, 현재 연속 오디오의 경우 불안정한 상태입니다. "세션 재시작" 방식은 현재 권장되는 안정적인 우회 방법입니다.
-
-## 📜 라이선스
-MIT License
