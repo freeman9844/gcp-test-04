@@ -6,5 +6,4 @@ __pycache__/
 .DS_Store
 *.txt
 !requirements.txt
-/specs/
 # Keep specs in the repo as documentation

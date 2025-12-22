@@ -1,0 +1,22 @@
+# Gemini Live API Dynamic Instruction Update Sample
+
+- [/] Setup Environment <!-- id: 0 -->
+    - [x] Check/Install dependencies (`google-genai`, `pyaudio`, `portaudio`) <!-- id: 1 -->
+    - [ ] Verify audio device availability <!-- id: 2 -->
+- [x] Implement Sample Application <!-- id: 3 -->
+    - [x] Create `gemini_live_test.py` with the provided code <!-- id: 4 -->
+    - [x] Review and refine code for `update_system_instruction` logic consistency <!-- id: 5 -->
+- [x] Verification <!-- id: 6 -->
+    - [x] Run the sample application <!-- id: 7 -->
+    - [x] Verify dynamic instruction updates (Assistant -> Pirate -> Korean Assistant) <!-- id: 8 -->
+        - Note: Confirmed using `role="system"` content updates works.
+- [x] Debug Audio Issue (Final Iteration) <!-- id: 13 -->
+    - [x] Add verbose logging for all server responses <!-- id: 14 -->
+    - [x] Implement and test "Priority User Directive" approach <!-- id: 15 -->
+    - [x] Analyze failure and implement "Session Restart" workaround <!-- id: 16 -->
+- [x] Test `role="system"` instruction update in single session <!-- id: 17 -->
+    - [x] Update script to use `role="system"` for instruction changes <!-- id: 18 -->
+    - [x] Run verification and analyze audio output (Confirmed failure: Model silences) <!-- id: 19 -->
+- [/] Final Documentation & Sync <!-- id: 20 -->
+    - [/] Create detailed README.md <!-- id: 21 -->
+    - [ ] Initialize Git and sync to `gcp-test-04` repository <!-- id: 22 -->
