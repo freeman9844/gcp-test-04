@@ -17,6 +17,6 @@
 - [x] Test `role="system"` instruction update in single session <!-- id: 17 -->
     - [x] Update script to use `role="system"` for instruction changes <!-- id: 18 -->
     - [x] Run verification and analyze audio output (Confirmed failure: Model silences) <!-- id: 19 -->
-- [/] Final Documentation & Sync <!-- id: 20 -->
-    - [/] Create detailed README.md <!-- id: 21 -->
-    - [ ] Initialize Git and sync to `gcp-test-04` repository <!-- id: 22 -->
+- [x] Final Documentation & Sync <!-- id: 20 -->
+    - [x] Create detailed README.md <!-- id: 21 -->
+    - [x] Initialize Git and sync to `gcp-test-04` repository <!-- id: 22 -->

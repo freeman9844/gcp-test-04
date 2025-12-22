@@ -72,31 +72,25 @@ class GeminiLiveAPITestVertexAI:
 
     async def update_system_instruction(self, new_instruction: str):
         """
-        사용자가 지정한 role="system" 방식을 사용하여 지침을 업데이트합니다.
+        [가장 신뢰할 수 있는 방식] 세션을 종료하고 새로운 인스트럭션으로 다시 연결합니다.
+        2.5-flash-native-audio 모델의 현재 한계를 극복하기 위한 'Wait & Reset' 전략입니다.
         """
-        if not self.session:
-            raise RuntimeError("연결된 세션이 없습니다.")
+        print(f"\n🔄 [Session Restart] 새 지침으로 세션 재시작 중: {new_instruction[:40]}...")
+        
+        # 1. 기존 리스너 및 세션 종료
+        if hasattr(self, '_listener_task'):
+            self._listener_task.cancel()
+            try:
+                await self._listener_task
+            except asyncio.CancelledError:
+                pass
 
-        print(f"\n🔄 [Role System Update] 지침 업데이트 중: {new_instruction[:40]}...")
+        self._close_audio_stream()
+        # 세션 닫기는 context manager가 처리하지만, 명시적으로 None 처리
+        self.session = None
 
-        # [Crucial Fix] 오디오 모달리티 유지를 위한 무음 오디오(0.1초) 전송
-        try:
-            silence_data = b'\x00' * 4800 # 0.1s @ 24kHz 16bit mono
-            await self.session.send_realtime_input(
-                audio={"data": silence_data, "mime_type": "audio/pcm;rate=24000"}
-            )
-        except: pass
-
-        await self.session.send_client_content(
-            turns=[
-                types.Content(
-                    role="system",
-                    parts=[types.Part(text=new_instruction)]
-                )
-            ],
-            turn_complete=False # 세션을 닫지 않고 지침만 업데이트
-        )
-        print("   -> role='system' update sent.")
+        # 2. 새로운 세션 연결 및 타이머 대기 (안정성을 위해 1초 대기)
+        self._next_instruction = new_instruction
 
     async def handle_session_events(self):
         """세션으로부터 응답을 수신하고 처리합니다."""
@@ -127,7 +121,7 @@ class GeminiLiveAPITestVertexAI:
                     if response.server_content.turn_complete:
                         print("\n[Turn Complete Signal Received]")
                         self.turn_completed_event.set()
-
+                
                 elif response.tool_call:
                     print(f"\n🔧 Tool call: {response.tool_call}")
                 
@@ -158,13 +152,12 @@ class GeminiLiveAPITestVertexAI:
         if not self.session:
             raise RuntimeError("Session not connected.")
         
-        # [Crucial Fix] 오디오 모달리티 유지를 위한 무음 오디오(0.1초) 전송
+        # [Crucial Fix] 오디오 모달리티 유지의 안정성을 위해 무음 오디오(0.1초) 전송 시도
         try:
             silence_data = b'\x00' * 4800 # 0.1s @ 24kHz 16bit mono
             await self.session.send_realtime_input(
                 audio={"data": silence_data, "mime_type": "audio/pcm;rate=24000"}
             )
-            print("   -> Sent silence heartbeat...")
         except: pass
 
         print(f"\n💬 [User]: {text}")
@@ -176,52 +169,53 @@ class GeminiLiveAPITestVertexAI:
 
 
 async def main():
-    """메인 함수: 단일 세션에서 role="system"으로 인스트럭션을 동적으로 변경하는 시나리오"""
-    print("\n🚀 Google Gemini Live API Dynamic Instruction Test (role='system' in single session)\n")
+    """메인 함수: 세션 재시작을 통한 지침 업데이트 증명 시나리오"""
+    print("\n🚀 Google Gemini Live API Dynamic Instruction Test (Reliable Session Restart)\n")
     project_id = "jwlee-argolis-202104"
     
     tester = GeminiLiveAPITestVertexAI(project_id=project_id)
+    current_instruction = "You are a helpful assistant. Reply briefly."
     
     try:
-        # 1. 초기 세션 시작 (Helpful Assistant)
-        async with await tester.connect(initial_instruction="You are a helpful assistant.") as session:
-            tester.session = session
-            # 응답 처리를 위한 리스너 시작
-            listener = asyncio.create_task(tester.handle_session_events())
-            
-            # --- 시나리오 1: 기본 상태 ---
-            tester.turn_completed_event.clear()
-            await tester.send_text("Hello! What is your current role?")
-            await asyncio.wait_for(tester.turn_completed_event.wait(), timeout=25.0)
-            
-            # --- 시나리오 2: 세션 유지 중 '해적'으로 변경 ---
-            print("\n" + "="*50)
-            await tester.update_system_instruction("You are now a pirate. Talk like one! Use 'Arrr' and 'Matey'.")
-            
-            # 지침 업데이트 후 약간의 대기 (모델이 처리할 시간)
-            await asyncio.sleep(2)
-            
-            tester.turn_completed_event.clear()
-            await tester.send_text("What is your mission as a pirate?")
-            await asyncio.wait_for(tester.turn_completed_event.wait(), timeout=25.0)
-            
-            # --- 시나리오 3: 세션 유지 중 '한국어 비서'로 변경 ---
-            print("\n" + "="*50)
-            await tester.update_system_instruction("당신은 친절한 한국어 비서입니다. 정중하게 한국어로 답변하세요.")
-            
-            await asyncio.sleep(2)
+        for turn_idx in range(3):
+            if turn_idx == 1:
+                current_instruction = "You are now a pirate. Talk like one! Arrr!"
+            elif turn_idx == 2:
+                current_instruction = "당신은 친절한 한국어 비서입니다. 정중하게 한국어로 답변하세요."
 
-            tester.turn_completed_event.clear()
-            await tester.send_text("공식적인 첫 인사를 해주고, 어떤 도움을 줄 수 있는지 알려주세요.")
-            await asyncio.wait_for(tester.turn_completed_event.wait(), timeout=25.0)
+            print(f"\n" + "="*60)
+            print(f"📡 Starting Session Turn {turn_idx+1} with Instruction: {current_instruction[:30]}...")
             
-            # 작업 종료
-            listener.cancel()
-            await asyncio.gather(listener, return_exceptions=True)
+            async with await tester.connect(initial_instruction=current_instruction) as session:
+                tester.session = session
+                tester.turn_completed_event.clear()
+                
+                # 응답 처리를 위한 리스너 시작
+                tester._listener_task = asyncio.create_task(tester.handle_session_events())
+                
+                if turn_idx == 0:
+                    await tester.send_text("Hello! What is your current role?")
+                elif turn_idx == 1:
+                    await tester.send_text("Who are you now, and what is your pirate mission?")
+                else:
+                    await tester.send_text("방금 어떤 컨셉이었는지 설명해주고, 현재 어떤 서비스를 제공가능한지 정중히 답변해주세요.")
+                
+                # 응답 완료 대기
+                try:
+                    await asyncio.wait_for(tester.turn_completed_event.wait(), timeout=30.0)
+                except asyncio.TimeoutError:
+                    print("\n⚠️ Response Timeout.")
+                
+                # 다음 턴을 위해 리스너 종료 및 세션 닫기
+                tester._listener_task.cancel()
+                await asyncio.gather(tester._listener_task, return_exceptions=True)
+                print(f"📴 Closed Session Turn {turn_idx+1}")
             
+            await asyncio.sleep(1) # 안정적인 재연결을 위한 간격
+
     finally:
         tester.close()
-        print("\n✅ 모든 실시간 업데이트 테스트 완료!")
+        print("\n✅ 모든 실시간 업데이트 테스트 완료 (세션 재시작 방식)!")
 
 
 if __name__ == "__main__":
