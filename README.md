@@ -1,67 +1,69 @@
-# Gemini Live API Dynamic Instruction Update (Audio Fix)
+[한국어 (Korean)](README.md) | [English](README.en.md)
 
-This project provides a robust solution for dynamically updating system instructions (personas/roles) in a **Google Gemini Live API (Vertex AI)** session without losing audio modality.
+# Gemini Live API 동적 인스트럭션 업데이트 (오디오 이슈 해결)
 
-## 🚀 The Challenge: Audio Interruption
-When using the `gemini-live-2.5-flash-native-audio` model, standard methods for updating system instructions during an active session (e.g., sending `role="system"` content or user directives) often lead to the model becoming silent or the session timing out after the first update.
+이 프로젝트는 **Google Gemini Live API (Vertex AI)** 세션 중 오디오 모달리티를 유지하면서 시스템 인스트럭션(페르소나/역할)을 동적으로 업데이트하기 위한 견고한 솔루션을 제공합니다.
 
-## ✅ The Solution: Session Restart (Wait & Reset)
-Through extensive testing of various workarounds (including silence injection and merged directives), the most reliable method for the current preview model is the **Session Restart** strategy. This ensure:
-1. **Audio Continuity**: Every response starts with fresh audio generation.
-2. **Persona Integrity**: The model strictly follows the new instruction from the first turn of the new session.
-3. **Session Stability**: Avoids long-term cache or state issues that cause "Native Audio" models to hang.
+## 🚀 과제: 오디오 중단 이슈
+`gemini-live-2.5-flash-native-audio` 모델을 사용할 때, 활성 세션 중에 시스템 인스트럭션을 업데이트하는 일반적인 방법(예: `role="system"` 콘텐츠 전송 또는 사용자 지시문)은 첫 번째 업데이트 이후 모델이 침묵하거나 세션이 타임아웃되는 현상을 자주 발생시킵니다.
 
-## 🛠 Features
-- **Dynamic Role Playing**: Switch from a Helpful Assistant to a Pirate or a Korean translator seamlessly.
-- **Multimodal Support**: Handles both text and audio output via `pyaudio`.
-- **Robust Synchronization**: Uses `asyncio.Event` to ensure turns are completed before starting new ones.
-- **Verbose Debugging**: Integrated logging to track raw server responses and audio chunk reception.
+## ✅ 해결책: 세션 재시작 (대기 및 재설정)
+다양한 해결 방법(무음 주입, 메시지 병합 등)을 광범위하게 테스트한 결과, 현재 프리뷰 모델에서 가장 신뢰할 수 있는 방법은 **세션 재시작(Session Restart)** 전략입니다. 이 방식은 다음을 보장합니다:
+1. **오디오 연속성**: 모든 응답이 새로운 오디오 생성과 함께 시작됩니다.
+2. **페르소나 무결성**: 모델이 새 세션의 첫 번째 턴부터 새로운 지침을 엄격하게 따릅니다.
+3. **세션 안정성**: "Native Audio" 모델이 멈추게 만드는 장기 캐시나 상태 문제를 방지합니다.
 
-## 📋 Prerequisites
-- Python 3.9+
-- Google Cloud Project with Vertex AI API enabled.
-- System dependencies (for PyAudio):
+## 🛠 주요 기능
+- **동적 역할극**: 도우미 비서에서 해적, 또는 한국어 번역가로 끊김 없이 전환됩니다.
+- **멀티모달 지원**: `pyaudio`를 통해 텍스트와 오디오 출력을 모두 처리합니다.
+- **견고한 동기화**: `asyncio.Event`를 사용하여 새 턴을 시작하기 전에 이전 응답이 완료되었는지 확인합니다.
+- **상세 디버깅**: 원시 서버 응답 및 오디오 청크 수신을 추적하기 위한 통합 로깅.
+
+## 📋 사전 요구사항
+- Python 3.9 이상
+- Vertex AI API가 활성화된 Google Cloud 프로젝트
+- 시스템 종속성 (PyAudio용):
   - macOS: `brew install portaudio`
   - Linux: `sudo apt-get install libportaudio2`
 
-## ⚙️ Installation
-1. Clone the repository:
+## ⚙️ 설치 방법
+1. 저장소 복제:
    ```bash
    git clone https://github.com/freeman9844/gcp-test-04.git
    cd gcp-test-04
    ```
-2. Create and activate a virtual environment:
+2. 가상 환경 생성 및 활성화:
    ```bash
    python -m venv venv
    source venv/bin/activate
    ```
-3. Install dependencies:
+3. 종속성 설치:
    ```bash
    pip install -r requirements.txt
    ```
 
-## 🚀 Usage
-Update the `project_id` in `gemini_live_test.py` and run:
+## 🚀 사용법
+`gemini_live_test.py` 파일의 `project_id`를 수정하고 실행하세요:
 ```bash
 python gemini_live_test.py
 ```
 
-### Script Scenario:
-1. **Turn 1**: Hello! (Helpful Assistant Role)
-2. **Update**: Changes to Pirate role.
-3. **Turn 2**: Who are you? (Responding as a Pirate)
-4. **Update**: Changes to Korean Assistant role.
-5. **Turn 3**: 안녕하세요. (Responding in Korean)
+### 스크립트 시나리오:
+1. **턴 1**: Hello! (도우미 비서 역할)
+2. **업데이트**: 해적 역할로 변경.
+3. **턴 2**: Who are you? (해적으로 응답)
+4. **업데이트**: 한국어 비서 역할로 변경.
+5. **턴 3**: 안녕하세요. (한국어로 응답)
 
-## 📁 Project Structure
-- `gemini_live_test.py`: Main test script with robust session management.
-- `requirements.txt`: Python package dependencies.
-- `/specs`: Detailed technical documentation.
-  - `walkthrough.md`: Comparative analysis of failed vs. successful approaches.
-  - `implementation_plan.md`: Technical architecture and verification details.
+## 📁 프로젝트 구조
+- `gemini_live_test.py`: 견고한 세션 관리가 포함된 메인 테스트 스크립트.
+- `requirements.txt`: Python 패키지 종속성.
+- `/specs`: 상세 기술 문서.
+  - `walkthrough.md`: 실패한 접근 방식과 성공한 접근 방식의 비교 분석.
+  - `implementation_plan.md`: 기술 아키텍처 및 검증 세부 정보.
 
-## ⚠️ Known Limitations
-The `gemini-live-2.5-flash-native-audio` is a preview model. While `role="system"` updates are technically supported, they are currently unstable for continuous audio. The "Session Restart" method is the recommended production-safe workaround.
+## ⚠️ 알려진 제한 사항
+`gemini-live-2.5-flash-native-audio`는 프리뷰 모델입니다. `role="system"` 업데이트가 기술적으로 지원되지만, 현재 연속 오디오의 경우 불안정한 상태입니다. "세션 재시작" 방식은 현재 권장되는 안정적인 우회 방법입니다.
 
-## 📜 License
+## 📜 라이선스
 MIT License
