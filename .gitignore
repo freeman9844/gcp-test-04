@@ -1,0 +1,10 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+*.txt
+!requirements.txt
+/specs/
+# Keep specs in the repo as documentation
